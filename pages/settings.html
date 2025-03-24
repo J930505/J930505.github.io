@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Selection App - Settings</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../css/common.css">
+    <style>
+        .settings-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .back-button {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--background-color);
+            margin-right: 15px;
+        }
+        
+        .settings-section {
+            background-color: white;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+        }
+        
+        .settings-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .settings-item:last-child {
+            border-bottom: none;
+        }
+        
+        .settings-item-left {
+            display: flex;
+            align-items: center;
+        }
+        
+        .settings-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 16px;
+            color: white;
+        }
+        
+        .icon-account {
+            background-color: #007AFF;
+        }
+        
+        .icon-notification {
+            background-color: #FF9500;
+        }
+        
+        .icon-privacy {
+            background-color: #5856D6;
+        }
+        
+        .icon-appearance {
+            background-color: #FF2D55;
+        }
+        
+        .icon-language {
+            background-color: #4CD964;
+        }
+        
+        .icon-storage {
+            background-color: #5AC8FA;
+        }
+        
+        .icon-help {
+            background-color: #FFCC00;
+        }
+        
+        .icon-about {
+            background-color: #8E8E93;
+        }
+        
+        .settings-item-text {
+            font-weight: 500;
+        }
+        
+        .settings-item-right {
+            display: flex;
+            align-items: center;
+            color: var(--text-secondary);
+        }
+        
+        .settings-item-value {
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #E5E5EA;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 24px;
+            width: 24px;
+            left: 3px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: #4CD964;
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(21px);
+        }
+        
+        .logout-button {
+            width: 100%;
+            padding: 16px;
+            text-align: center;
+            color: #FF3B30;
+            font-weight: 600;
+            border-radius: 15px;
+            background-color: white;
+            margin-top: 30px;
+        }
+        
+        .version-info {
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 20px;
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+<body>
+    <!-- iOS Status Bar -->
+    <div class="status-bar">
+        <div class="status-bar-time">12:30</div>
+        <div class="status-bar-icons">
+            <i class="fas fa-wifi"></i>
+            <i class="fas fa-signal"></i>
+            <i class="fas fa-battery-full"></i>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="content">
+        <div class="settings-header">
+            <a href="profile.html" class="back-button">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="header header-large">設置</h1>
+        </div>
+        
+        <div class="section-title">帳號與安全</div>
+        <div class="settings-section">
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <div class="settings-icon icon-account">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="settings-item-text">帳號資訊</div>
+                </div>
+                <div class="settings-item-right">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+            
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <div class="settings-icon icon-privacy">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="settings-item-text">隱私與安全</div>
+                </div>
+                <div class="settings-item-right">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section-title">通知與偏好</div>
+        <div class="settings-section">
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <div class="settings-icon icon-notification">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="settings-item-text">通知設置</div>
+                </div>
+                <div class="settings-item-right">
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <div class="settings-icon" style="background-color: #007AFF;">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div>
+                        <div class="settings-item-text">AI照片推薦</div>
+                        <div class="text-xs text-gray-500 mt-1">開啟後顯示AI推薦的相似或相同照片，關閉則按時間排序</div>
+                    </div>
+                </div>
+                <div class="settings-item-right">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="aiRecommendToggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <div class="settings-icon icon-appearance">
+                        <i class="fas fa-moon"></i>
+                    </div>
+                    <div class="settings-item-text">深色模式</div>
+                </div>
+                <div class="settings-item-right">
+                    <div class="settings-item-value">關閉</div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+            
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <div class="settings-icon icon-language">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <div class="settings-item-text">語言</div>
+                </div>
+                <div class="settings-item-right">
+                    <div class="settings-item-value">繁體中文</div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section-title">儲存與數據</div>
+        <div class="settings-section">
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <div class="settings-icon icon-storage">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="settings-item-text">快取管理</div>
+                </div>
+                <div class="settings-item-right">
+                    <div class="settings-item-value">128MB</div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+            
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <div class="settings-icon icon-storage">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <div class="settings-item-text">下載設置</div>
+                </div>
+                <div class="settings-item-right">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section-title">支援與關於</div>
+        <div class="settings-section">
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <div class="settings-icon icon-help">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <div class="settings-item-text">幫助與反饋</div>
+                </div>
+                <div class="settings-item-right">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+            
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <div class="settings-icon icon-about">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div class="settings-item-text">關於我們</div>
+                </div>
+                <div class="settings-item-right">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+        </div>
+        
+        <button class="logout-button">退出登入</button>
+        
+        <div class="version-info">
+            照片精選 v1.0.0
+        </div>
+    </div>
+
+    <!-- Bottom Tab Bar -->
+    <div class="tab-bar">
+        <a href="home.html" class="tab-item">
+            <div class="tab-icon"><i class="fas fa-home"></i></div>
+            <div>首頁</div>
+        </a>
+        <a href="collections.html" class="tab-item">
+            <div class="tab-icon"><i class="fas fa-images"></i></div>
+            <div>收藏</div>
+        </a>
+        <a href="profile.html" class="tab-item">
+            <div class="tab-icon"><i class="fas fa-user"></i></div>
+            <div>我的</div>
+        </a>
+        <a href="settings.html" class="tab-item active">
+            <div class="tab-icon"><i class="fas fa-cog"></i></div>
+            <div>設置</div>
+        </a>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 獲取AI推薦設置按鈕
+            const aiRecommendToggle = document.getElementById('aiRecommendToggle');
+            
+            // 從localStorage讀取設置
+            const savedSetting = localStorage.getItem('aiRecommendEnabled');
+            if (savedSetting !== null) {
+                aiRecommendToggle.checked = savedSetting === 'true';
+            }
+            
+            // 監聽設置變化並保存
+            aiRecommendToggle.addEventListener('change', function() {
+                localStorage.setItem('aiRecommendEnabled', this.checked);
+                
+                // 顯示設置已保存提示
+                const toast = document.createElement('div');
+                toast.style.position = 'fixed';
+                toast.style.bottom = '100px';
+                toast.style.left = '50%';
+                toast.style.transform = 'translateX(-50%)';
+                toast.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                toast.style.color = 'white';
+                toast.style.padding = '10px 20px';
+                toast.style.borderRadius = '20px';
+                toast.style.fontSize = '14px';
+                toast.style.zIndex = '9999';
+                toast.innerHTML = this.checked ? 
+                    '<i class="fas fa-check-circle mr-2"></i>已開啟AI照片推薦' : 
+                    '<i class="fas fa-check-circle mr-2"></i>已關閉AI照片推薦，將按時間排序';
+                
+                document.body.appendChild(toast);
+                
+                setTimeout(function() {
+                    document.body.removeChild(toast);
+                }, 2000);
+            });
+        });
+    </script>
+</body>
+</html> 
