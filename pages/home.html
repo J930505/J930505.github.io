@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Selection App - Home</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../css/common.css">
+    <style>
+        .photo-tag {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            background-color: rgba(0,0,0,0.6);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .photo-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            color: white;
+            padding: 60px 20px 20px;
+        }
+        
+        .swipe-card {
+            transform: scale(0.95);
+            opacity: 0.9;
+            transition: all 0.3s;
+        }
+        
+        .swipe-card.active {
+            transform: scale(1);
+            opacity: 1;
+            z-index: 10;
+        }
+        
+        .swipe-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            font-weight: bold;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+        
+        .swipe-overlay.like {
+            background-color: rgba(0, 122, 255, 0.2);
+            color: white;
+            border: 8px solid #007AFF;
+        }
+        
+        .swipe-overlay.dislike {
+            background-color: rgba(255, 45, 85, 0.2);
+            color: white;
+            border: 8px solid #FF2D55;
+        }
+        
+        .swipe-overlay.saved {
+            background-color: rgba(88, 86, 214, 0.2);
+            color: white;
+            border: 8px solid #5856D6;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px 0;
+            position: relative;
+        }
+        
+        .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 12px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            width: max-content;
+            margin-bottom: 10px;
+        }
+        
+        .tooltip:after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: rgba(0, 0, 0, 0.7) transparent transparent transparent;
+        }
+        
+        .action-button {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-size: 24px;
+            transition: all 0.2s;
+        }
+        
+        .action-button:active {
+            transform: scale(0.9);
+        }
+        
+        .btn-dislike {
+            background-color: white;
+            color: #FF2D55;
+        }
+        
+        .btn-like {
+            background-color: white;
+            color: #007AFF;
+        }
+        
+        .btn-save {
+            background-color: #5856D6;
+            color: white;
+        }
+        
+        .btn-restore {
+            background-color: white;
+            color: #FFCC00;
+            font-size: 22px;
+        }
+        
+        /* 刪除照片恢復區域樣式 */
+        .deleted-photos-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-in-out;
+            max-height: 70vh;
+            overflow-y: auto;
+            padding-bottom: 83px; /* 底部標籤列高度 */
+        }
+        
+        .deleted-photos-panel.show {
+            transform: translateY(0);
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            background-color: white;
+            z-index: 2;
+        }
+        
+        .panel-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .close-panel {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--background-color);
+        }
+        
+        .panel-handle {
+            width: 40px;
+            height: 5px;
+            background-color: var(--border-color);
+            border-radius: 3px;
+            margin: 10px auto;
+        }
+        
+        .deleted-photos-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 20px;
+        }
+        
+        .deleted-photo-item {
+            position: relative;
+            aspect-ratio: 1/1;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .deleted-photo-item.selected {
+            border-color: var(--primary-color);
+        }
+        
+        .deleted-photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        
+        .deleted-photo-item.selected img {
+            opacity: 1;
+        }
+        
+        .photo-restore-checkbox {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background-color: white;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: transparent;
+            font-size: 12px;
+        }
+        
+        .deleted-photo-item.selected .photo-restore-checkbox {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .photo-info-small {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            color: white;
+            padding: 30px 10px 10px;
+            font-size: 12px;
+        }
+        
+        .restore-actions {
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 15px 20px;
+            background-color: white;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .restore-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            justify-content: center;
+        }
+        
+        .restore-btn:disabled {
+            background-color: var(--background-color);
+            color: var(--text-secondary);
+        }
+        
+        .overlay-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s;
+        }
+        
+        .overlay-bg.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .album-selection-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 2000;
+        }
+        
+        .album-modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .album-modal-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            padding-bottom: 30px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .album-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .album-modal-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .close-album-modal {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--background-color);
+        }
+        
+        .album-list {
+            padding: 15px;
+        }
+        
+        .album-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: background-color 0.2s;
+        }
+        
+        .album-item:active {
+            background-color: var(--background-color);
+        }
+        
+        .album-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            background-color: var(--background-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 20px;
+            color: var(--primary-color);
+        }
+        
+        .album-info {
+            flex: 1;
+        }
+        
+        .album-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .album-count {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <!-- iOS Status Bar -->
+    <div class="status-bar">
+        <div class="status-bar-time">12:30</div>
+        <div class="status-bar-icons">
+            <i class="fas fa-wifi"></i>
+            <i class="fas fa-signal"></i>
+            <i class="fas fa-battery-full"></i>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="content">
+        <div class="flex items-center justify-between px-4 py-3 mt-2 mb-3">
+            <!-- 左側按鈕 -->
+            <button class="action-button btn-restore" id="restoreBtn" style="width: 40px; height: 40px; font-size: 16px;">
+                <i class="fas fa-undo"></i>
+            </button>
+            <div class="tooltip" id="restoreTooltip">查看已刪除的照片</div>
+            
+            <!-- 中間按鈕 -->
+            <a href="#" id="permissionBtn" class="action-button" style="width: 40px; height: 40px; background-color: #f5f5f7; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-images text-primary-color text-lg"></i>
+            </a>
+            
+            <a href="detail.html" id="infoBtn" class="action-button" style="width: 40px; height: 40px; background-color: #f5f5f7; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-info-circle text-primary-color text-lg"></i>
+            </a>
+            
+            <!-- 右側按鈕 -->
+            <button class="action-button btn-save" id="albumBtn" style="width: 40px; height: 40px; font-size: 16px;">
+                <i class="fas fa-folder-plus"></i>
+            </button>
+        </div>
+        
+        <!-- Swipe Container -->
+        <div class="swipe-container">
+            <!-- Card 1 (Active) -->
+            <div class="swipe-card active" id="card1">
+                <img src="https://images.unsplash.com/photo-1480796927426-f609979314bd?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" alt="Japan Temple">
+                <div class="swipe-overlay" id="overlay1"></div>
+            </div>
+            
+            <!-- Card 2 -->
+            <div class="swipe-card" id="card2" style="z-index: 9;">
+                <img src="https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" alt="Venice Canal">
+                <div class="swipe-overlay" id="overlay2"></div>
+            </div>
+            
+            <!-- Card 3 -->
+            <div class="swipe-card" id="card3" style="z-index: 8;">
+                <img src="https://images.unsplash.com/photo-1533929736458-ca588d08c8be?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" alt="Paris Street">
+                <div class="swipe-overlay" id="overlay3"></div>
+            </div>
+        </div>
+        
+        <!-- 滑動提示 -->
+        <div class="swipe-instructions text-center text-sm text-gray-500 mt-2 mb-2">
+            <p><i class="fas fa-arrow-left"></i> 向左滑動不喜歡 | 向右滑動保存 <i class="fas fa-arrow-right"></i></p>
+        </div>
+        
+        <div class="text-center text-sm text-gray-500 mt-4">
+            <p>今日推薦: 36 張照片</p>
+            <p>已瀏覽: 1/36</p>
+        </div>
+    </div>
+
+    <!-- 刪除照片恢復面板 -->
+    <div class="overlay-bg" id="overlayBg"></div>
+    <div class="deleted-photos-panel" id="deletedPhotosPanel">
+        <div class="panel-handle"></div>
+        <div class="panel-header">
+            <h3>已刪除的照片</h3>
+            <button class="close-panel" id="closePanel">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="deleted-photos-grid" id="deletedPhotosGrid">
+            <!-- 已刪除的照片將在這裡動態添加 -->
+        </div>
+        <div class="restore-actions">
+            <button class="restore-btn" id="restoreSelectedBtn" disabled>
+                <i class="fas fa-undo"></i> 恢復選中的照片 (<span id="selectedCount">0</span>)
+            </button>
+        </div>
+    </div>
+
+    <!-- Bottom Tab Bar -->
+    <div class="tab-bar">
+        <a href="home.html" class="tab-item active">
+            <div class="tab-icon"><i class="fas fa-home"></i></div>
+            <div>首頁</div>
+        </a>
+        <a href="collections.html" class="tab-item">
+            <div class="tab-icon"><i class="fas fa-images"></i></div>
+            <div>收藏</div>
+        </a>
+        <a href="profile.html" class="tab-item">
+            <div class="tab-icon"><i class="fas fa-user"></i></div>
+            <div>我的</div>
+        </a>
+        <a href="settings.html" class="tab-item">
+            <div class="tab-icon"><i class="fas fa-cog"></i></div>
+            <div>設置</div>
+        </a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const restoreBtn = document.getElementById('restoreBtn');
+            const albumBtn = document.getElementById('albumBtn');
+            const cards = document.querySelectorAll('.swipe-card');
+            const overlays = document.querySelectorAll('.swipe-overlay');
+            let currentCardIndex = 0;
+            let previousCards = [];
+            
+            // 讀取AI推薦設置
+            let isAIRecommendEnabled = localStorage.getItem('aiRecommendEnabled');
+            // 如果沒有設置過，默認為開啟
+            if (isAIRecommendEnabled === null) {
+                isAIRecommendEnabled = true;
+                localStorage.setItem('aiRecommendEnabled', 'true');
+            } else {
+                isAIRecommendEnabled = isAIRecommendEnabled === 'true';
+            }
+            
+            // 更新推薦模式文字
+            function updateRecommendationMode() {
+                const modeText = document.createElement('div');
+                modeText.className = 'text-xs text-primary-color mb-2 text-center';
+                modeText.innerHTML = isAIRecommendEnabled ? 
+                    '<i class="fas fa-robot mr-1"></i> AI推薦模式' : 
+                    '<i class="fas fa-clock mr-1"></i> 時間排序模式';
+                
+                const statsElem = document.querySelector('.text-center.text-sm.text-gray-500.mt-4');
+                if (statsElem.previousElementSibling && statsElem.previousElementSibling.classList.contains('text-primary-color')) {
+                    statsElem.parentNode.removeChild(statsElem.previousElementSibling);
+                }
+                statsElem.parentNode.insertBefore(modeText, statsElem);
+            }
+            
+            // 初始時更新模式提示
+            updateRecommendationMode();
+            
+            // 删除照片面板相关元素
+            const deletedPhotosPanel = document.getElementById('deletedPhotosPanel');
+            const overlayBg = document.getElementById('overlayBg');
+            const closePanel = document.getElementById('closePanel');
+            const deletedPhotosGrid = document.getElementById('deletedPhotosGrid');
+            const restoreSelectedBtn = document.getElementById('restoreSelectedBtn');
+            const selectedCountElem = document.getElementById('selectedCount');
+            let selectedPhotos = [];
+            
+            // 存储删除的照片信息
+            const deletedPhotos = [
+                {
+                    id: 'deleted1',
+                    src: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
+                    title: '京都寺廟',
+                    location: '京都, 日本',
+                    tag: '風景',
+                    date: '2023/10/25'
+                },
+                {
+                    id: 'deleted2',
+                    src: 'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
+                    title: '日式神社',
+                    location: '東京, 日本',
+                    tag: '建築',
+                    date: '2023/10/23'
+                },
+                {
+                    id: 'deleted3',
+                    src: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
+                    title: '美食擺盤',
+                    location: '巴黎, 法國',
+                    tag: '美食',
+                    date: '2023/10/21'
+                },
+                {
+                    id: 'deleted4',
+                    src: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
+                    title: '城市建築',
+                    location: '羅馬, 義大利',
+                    tag: '城市',
+                    date: '2023/10/20'
+                },
+                {
+                    id: 'deleted5',
+                    src: 'https://images.unsplash.com/photo-1478145046317-39f10e56b5e9?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
+                    title: '甜點蛋糕',
+                    location: '巴黎, 法國',
+                    tag: '美食',
+                    date: '2023/10/18'
+                },
+                {
+                    id: 'deleted6',
+                    src: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
+                    title: '夕陽海岸',
+                    location: '馬爾代夫',
+                    tag: '風景',
+                    date: '2023/10/15'
+                }
+            ];
+            
+            // 渲染删除的照片到面板
+            function renderDeletedPhotos() {
+                deletedPhotosGrid.innerHTML = '';
+                
+                deletedPhotos.forEach(photo => {
+                    const photoElement = document.createElement('div');
+                    photoElement.className = 'deleted-photo-item';
+                    photoElement.dataset.id = photo.id;
+                    
+                    photoElement.innerHTML = `
+                        <img src="${photo.src}" alt="${photo.title}">
+                        <div class="photo-info-small">
+                            <div class="font-bold">${photo.title}</div>
+                            <div class="text-xs opacity-80">${photo.date}</div>
+                        </div>
+                        <div class="photo-restore-checkbox">
+                            <i class="fas fa-check"></i>
+                        </div>
+                    `;
+                    
+                    photoElement.addEventListener('click', () => {
+                        photoElement.classList.toggle('selected');
+                        
+                        if (photoElement.classList.contains('selected')) {
+                            selectedPhotos.push(photo.id);
+                        } else {
+                            selectedPhotos = selectedPhotos.filter(id => id !== photo.id);
+                        }
+                        
+                        // 更新选中数量和恢复按钮状态
+                        selectedCountElem.textContent = selectedPhotos.length;
+                        restoreSelectedBtn.disabled = selectedPhotos.length === 0;
+                    });
+                    
+                    deletedPhotosGrid.appendChild(photoElement);
+                });
+            }
+            
+            // 打开删除照片面板
+            function openDeletedPhotosPanel() {
+                deletedPhotosPanel.classList.add('show');
+                overlayBg.classList.add('show');
+                renderDeletedPhotos();
+            }
+            
+            // 关闭删除照片面板
+            function closeDeletedPhotosPanel() {
+                deletedPhotosPanel.classList.remove('show');
+                overlayBg.classList.remove('show');
+                selectedPhotos = [];
+                selectedCountElem.textContent = '0';
+                restoreSelectedBtn.disabled = true;
+            }
+            
+            // 恢复选中的照片
+            function restoreSelectedPhotos() {
+                // 这里可以实现恢复照片的逻辑
+                alert(`已恢復${selectedPhotos.length}張照片`);
+                
+                // 从删除列表中移除这些照片
+                selectedPhotos.forEach(id => {
+                    const index = deletedPhotos.findIndex(photo => photo.id === id);
+                    if (index !== -1) {
+                        deletedPhotos.splice(index, 1);
+                    }
+                });
+                
+                // 重新渲染面板并重置选择
+                renderDeletedPhotos();
+                selectedPhotos = [];
+                selectedCountElem.textContent = '0';
+                restoreSelectedBtn.disabled = true;
+                
+                // 如果没有照片了，关闭面板
+                if (deletedPhotos.length === 0) {
+                    closeDeletedPhotosPanel();
+                }
+            }
+            
+            // 事件监听
+            restoreBtn.addEventListener('click', openDeletedPhotosPanel);
+            closePanel.addEventListener('click', closeDeletedPhotosPanel);
+            overlayBg.addEventListener('click', closeDeletedPhotosPanel);
+            restoreSelectedBtn.addEventListener('click', restoreSelectedPhotos);
+            
+            // 修改tooltip内容
+            const restoreTooltip = document.getElementById('restoreTooltip');
+            
+            restoreBtn.addEventListener('mouseover', function() {
+                restoreTooltip.style.opacity = '1';
+            });
+            
+            restoreBtn.addEventListener('mouseout', function() {
+                restoreTooltip.style.opacity = '0';
+            });
+            
+            // 移动设备触摸支持
+            restoreBtn.addEventListener('touchstart', function() {
+                restoreTooltip.style.opacity = '1';
+                setTimeout(() => {
+                    restoreTooltip.style.opacity = '0';
+                }, 1500);
+            });
+            
+            // 显示下一张卡片
+            function showNextCard() {
+                if (currentCardIndex < cards.length - 1) {
+                    // 存储当前卡片到历史
+                    previousCards.push(currentCardIndex);
+                    
+                    // 使当前卡片不可见
+                    cards[currentCardIndex].classList.remove('active');
+                    cards[currentCardIndex].style.transform = 'translateX(-100%)';
+                    cards[currentCardIndex].style.opacity = '0';
+                    
+                    // 激活下一张卡片
+                    currentCardIndex++;
+                    cards[currentCardIndex].classList.add('active');
+                    
+                    // 更新恢复按钮状态
+                    restoreBtn.style.opacity = previousCards.length > 0 ? '1' : '0.5';
+                    restoreBtn.disabled = previousCards.length === 0;
+                    
+                    // 更新照片浏览统计
+                    updatePhotoStats();
+                }
+            }
+            
+            // 恢复上一张卡片
+            function restorePreviousCard() {
+                if (previousCards.length > 0) {
+                    // 移除当前卡片的激活状态
+                    cards[currentCardIndex].classList.remove('active');
+                    
+                    // 获取上一张卡片索引
+                    currentCardIndex = previousCards.pop();
+                    
+                    // 重新激活上一张卡片
+                    cards[currentCardIndex].classList.add('active');
+                    cards[currentCardIndex].style.transform = '';
+                    cards[currentCardIndex].style.opacity = '1';
+                    
+                    // 更新恢复按钮状态
+                    restoreBtn.style.opacity = previousCards.length > 0 ? '1' : '0.5';
+                    restoreBtn.disabled = previousCards.length === 0;
+                    
+                    // 更新照片浏览统计
+                    updatePhotoStats();
+                }
+            }
+            
+            // 更新照片浏览统计
+            function updatePhotoStats() {
+                const totalPhotos = cards.length;
+                const viewedPhotos = currentCardIndex + 1;
+                document.querySelector('.text-center.text-sm.text-gray-500.mt-4').innerHTML = 
+                    `<p>今日推薦: ${totalPhotos} 張照片</p>
+                     <p>已瀏覽: ${viewedPhotos}/${totalPhotos}</p>`;
+                     
+                // 更新推薦模式文字
+                updateRecommendationMode();
+            }
+            
+            // 初始化照片统计
+            updatePhotoStats();
+            
+            // 相册选择面板
+            let albumSelectionModal;
+            
+            // 权限请求按钮
+            const permissionBtn = document.getElementById('permissionBtn');
+            
+            // 请求访问照片库权限
+            permissionBtn.addEventListener('click', function() {
+                requestPhotoLibraryPermission();
+            });
+            
+            function requestPhotoLibraryPermission() {
+                // 模拟请求权限
+                const userAccepted = confirm("此應用需要訪問您的照片庫。允許「照片精選」訪問您的照片庫嗎？");
+                
+                if (userAccepted) {
+                    alert("已獲得照片庫訪問權限");
+                } else {
+                    alert("需要照片庫訪問權限才能使用完整功能");
+                }
+            }
+            
+            // 创建相册选择Modal
+            function createAlbumSelectionModal() {
+                const modal = document.createElement('div');
+                modal.className = 'album-selection-modal';
+                modal.innerHTML = `
+                    <div class="album-modal-overlay"></div>
+                    <div class="album-modal-content">
+                        <div class="album-modal-header">
+                            <h3>選擇相冊</h3>
+                            <button class="close-album-modal">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="album-list">
+                            <div class="album-item">
+                                <div class="album-icon">
+                                    <i class="fas fa-images"></i>
+                                </div>
+                                <div class="album-info">
+                                    <div class="album-name">旅行相冊</div>
+                                    <div class="album-count">28張</div>
+                                </div>
+                            </div>
+                            <div class="album-item">
+                                <div class="album-icon">
+                                    <i class="fas fa-images"></i>
+                                </div>
+                                <div class="album-info">
+                                    <div class="album-name">美食收藏</div>
+                                    <div class="album-count">12張</div>
+                                </div>
+                            </div>
+                            <div class="album-item">
+                                <div class="album-icon">
+                                    <i class="fas fa-images"></i>
+                                </div>
+                                <div class="album-info">
+                                    <div class="album-name">風景照</div>
+                                    <div class="album-count">36張</div>
+                                </div>
+                            </div>
+                            <div class="album-item">
+                                <div class="album-icon">
+                                    <i class="fas fa-plus-circle"></i>
+                                </div>
+                                <div class="album-info">
+                                    <div class="album-name">建立新相冊</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+                // 添加事件监听器
+                const overlay = modal.querySelector('.album-modal-overlay');
+                const closeBtn = modal.querySelector('.close-album-modal');
+                const albumItems = modal.querySelectorAll('.album-item');
+                
+                overlay.addEventListener('click', hideAlbumModal);
+                closeBtn.addEventListener('click', hideAlbumModal);
+                
+                albumItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        const albumName = this.querySelector('.album-name').textContent;
+                        if (albumName === '建立新相冊') {
+                            const newAlbumName = prompt('請輸入新相冊名稱:');
+                            if (newAlbumName && newAlbumName.trim() !== '') {
+                                alert(`照片已保存到新相冊「${newAlbumName}」`);
+                            }
+                        } else {
+                            alert(`照片已保存到「${albumName}」`);
+                        }
+                        hideAlbumModal();
+                    });
+                });
+                
+                function hideAlbumModal() {
+                    modal.style.display = 'none';
+                }
+                
+                // 默认隐藏
+                modal.style.display = 'none';
+                
+                return modal;
+            }
+            
+            // 初始化相册选择Modal
+            setTimeout(() => {
+                albumSelectionModal = createAlbumSelectionModal();
+                
+                // 给保存按钮添加显示相册选择的功能
+                albumBtn.addEventListener('click', function() {
+                    // 显示相册选择Modal
+                    albumSelectionModal.style.display = 'block';
+                    
+                    // 檢查是否有新設置
+                    const currentSetting = localStorage.getItem('aiRecommendEnabled') === 'true';
+                    if (currentSetting !== isAIRecommendEnabled) {
+                        isAIRecommendEnabled = currentSetting;
+                        // 如果設置已更改，可以在此處添加重新排序照片的邏輯
+                        updateRecommendationMode();
+                    }
+                });
+            }, 500);
+            
+            // 初始化禁用恢復按鈕
+            restoreBtn.disabled = true;
+            restoreBtn.style.opacity = '0.5';
+            
+            // 滑動功能
+            let startX, moveX;
+            const threshold = 100;
+            
+            cards.forEach((card, index) => {
+                card.addEventListener('touchstart', (e) => {
+                    if (index === currentCardIndex) {
+                        startX = e.touches[0].clientX;
+                    }
+                });
+                
+                card.addEventListener('touchmove', (e) => {
+                    if (index === currentCardIndex) {
+                        moveX = e.touches[0].clientX;
+                        const diff = moveX - startX;
+                        
+                        if (Math.abs(diff) > 20) {
+                            card.style.transform = `translateX(${diff}px) rotate(${diff * 0.05}deg)`;
+                            
+                            const overlay = overlays[currentCardIndex];
+                            if (diff < 0) {
+                                // 左滑 - 不喜歡
+                                overlay.classList.add('dislike');
+                                overlay.innerHTML = '<i class="fas fa-times"></i>';
+                                overlay.style.opacity = Math.min(Math.abs(diff) / threshold, 1);
+                            } else {
+                                // 右滑 - 保存
+                                overlay.classList.add('saved');
+                                overlay.innerHTML = '<i class="fas fa-bookmark"></i>';
+                                overlay.style.opacity = Math.min(Math.abs(diff) / threshold, 1);
+                            }
+                        }
+                    }
+                });
+                
+                card.addEventListener('touchend', (e) => {
+                    if (index === currentCardIndex) {
+                        const diff = moveX - startX;
+                        const overlay = overlays[currentCardIndex];
+                        
+                        if (diff < -threshold) {
+                            // 左滑 - 不喜歡
+                            card.style.transform = 'translateX(-1000px)';
+                            setTimeout(() => {
+                                overlay.style.opacity = '0';
+                                overlay.classList.remove('dislike');
+                                showNextCard();
+                            }, 300);
+                        } else if (diff > threshold) {
+                            // 右滑 - 保存
+                            card.style.transform = 'translateX(1000px)';
+                            setTimeout(() => {
+                                overlay.style.opacity = '0';
+                                overlay.classList.remove('saved');
+                                // 顯示相冊選擇Modal
+                                albumSelectionModal.style.display = 'block';
+                                showNextCard();
+                            }, 300);
+                        } else {
+                            // 重置位置
+                            card.style.transform = 'translateX(0) rotate(0)';
+                            overlay.style.opacity = '0';
+                            setTimeout(() => {
+                                overlay.classList.remove('dislike');
+                                overlay.classList.remove('saved');
+                            }, 300);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html> 
